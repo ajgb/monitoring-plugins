@@ -180,11 +180,15 @@ OK: shard stats (database:measurements, id:20) for: diskBytes | diskBytes=972026
 
 func seriesMatched(series models.Row) bool {
 	tags_provided := len(opts.Tags)
-	if opts.RunMode == "query" || len(opts.Module) == 0 || (series.Name == opts.Module && tags_provided == 0) {
+	if opts.RunMode == "query" || len(opts.Module) == 0 {
 		return true
 	}
 
-	if tags_provided > 0 {
+	if series.Name == opts.Module {
+		if tags_provided == 0 {
+			return true
+		}
+
 		tags_matched := 0
 		for k, expected := range opts.Tags {
 			if got, ok := series.Tags[k]; ok && got == expected {
