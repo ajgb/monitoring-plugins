@@ -150,23 +150,24 @@ OK: shard stats (database:measurements, id:20) for: diskBytes | diskBytes=972026
 				if len(s.Values) > 1 {
 					check.ExitCritical("Query returns multiple rows")
 				}
-				for _, d := range s.Values {
-					for i, n := range s.Columns {
-						// skip time column returned in Query mode
-						if opts.RunMode == "query" && n == "time" {
-							continue
+				if len(s.Values) != 1 {
+					continue
+				}
+				for i, n := range s.Columns {
+					// skip time column returned in Query mode
+					if opts.RunMode == "query" && n == "time" {
+						continue
+					}
+					// accept all columns returned in Query mode
+					// or if metric  was requested
+					// or no filter was specified
+					if _, ok := wanted_metrics[n]; opts.RunMode == "query" || ok || len(wanted_metrics) == 0 {
+						v, _ := s.Values[0][i].(json.Number).Int64()
+						err := check.AddMetric(n, v, opts.UOM, opts.WarningThreshold, opts.CriticalThreshold)
+						if err != nil {
+							check.ExitCritical("%s", err)
 						}
-						// accept all columns returned in Query mode
-						// or if metric  was requested
-						// or no filter was specified
-						if _, ok := wanted_metrics[n]; opts.RunMode == "query" || ok || len(wanted_metrics) == 0 {
-							v, _ := d[i].(json.Number).Int64()
-							err := check.AddMetric(n, v, opts.UOM, opts.WarningThreshold, opts.CriticalThreshold)
-							if err != nil {
-								check.ExitCritical("%s", err)
-							}
-							got_data = true
-						}
+						got_data = true
 					}
 				}
 			}
