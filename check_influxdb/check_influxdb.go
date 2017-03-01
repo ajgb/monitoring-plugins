@@ -11,7 +11,9 @@ import (
 )
 
 var opts struct {
-	Hostname           string            `short:"H" long:"hostname" description:"InfluxDB server" default:"http://localhost:8086" required:"true"`
+	Hostname           string            `short:"H" long:"hostname" description:"InfluxDB server host" default:"localhost"`
+	Schema             string            `short:"s" long:"schema" description:"Protocol schema" default:"http" required:"true"`
+	Port               int               `short:"P" long:"port" description:"InfluxDB server port" default:"8086" required:"true"`
 	Username           string            `short:"u" long:"username" description:"Username"`
 	Password           string            `short:"p" long:"password" description:"Password"`
 	RunMode            string            `short:"r" long:"run" description:"Run mode: stats or query" default:"stats" required:"true"`
@@ -113,7 +115,7 @@ OK: shard stats (database:measurements, id:20) for: diskBytes | diskBytes=972026
 
 	// Influxdb Client
 	clientConfig := client.HTTPConfig{
-		Addr:               opts.Hostname,
+		Addr:               fmt.Sprintf("%s://%s:%d", opts.Schema, opts.Hostname, opts.Port),
 		InsecureSkipVerify: opts.InsecureSkipVerify,
 	}
 
