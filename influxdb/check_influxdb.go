@@ -29,14 +29,12 @@ var opts struct {
 
 func main() {
 	var (
-		mode_query string
-		database   string
-		results    []client.Result
-		got_data   bool
+		modeQuery string
+		database  string
+		results   []client.Result
+		gotData   bool
 	)
-	wanted_metrics := make(map[string]bool)
-
-
+	wantedMetrics := make(map[string]bool)
 
 	// init plugin
 	check := checkPlugin()
@@ -49,10 +47,10 @@ func main() {
 	// mode specific settings
 	switch opts.RunMode {
 	case "stats":
-		mode_query = fmt.Sprintf("SHOW STATS FOR '%s'", opts.Module)
+		modeQuery = fmt.Sprintf("SHOW STATS FOR '%s'", opts.Module)
 
 		for _, m := range opts.Metrics {
-			wanted_metrics[m] = true
+			wantedMetrics[m] = true
 		}
 		msg := fmt.Sprintf("%s stats", opts.Module)
 		if len(opts.Tags) > 0 {
@@ -68,7 +66,7 @@ func main() {
 		check.AddMessage(msg)
 	case "query":
 		if len(opts.Query) > 0 {
-			mode_query = opts.Query
+			modeQuery = opts.Query
 		} else {
 			check.ExitCritical("Query parameter required in query mode\n")
 		}
@@ -96,7 +94,7 @@ func main() {
 
 	// execute query
 	q := client.Query{
-		Command:   mode_query,
+		Command:   modeQuery,
 		Database:  database,
 		Precision: "s",
 	}
@@ -128,42 +126,42 @@ func main() {
 					// accept all columns returned in Query mode
 					// or if metric  was requested
 					// or no filter was specified
-					if _, ok := wanted_metrics[n]; opts.RunMode == "query" || ok || len(wanted_metrics) == 0 {
+					if _, ok := wantedMetrics[n]; opts.RunMode == "query" || ok || len(wantedMetrics) == 0 {
 						v, _ := s.Values[0][i].(json.Number).Int64()
 						err := check.AddMetric(n, v, opts.UOM, opts.WarningThreshold, opts.CriticalThreshold)
 						if err != nil {
 							check.ExitCritical("%s", err)
 						}
-						got_data = true
+						gotData = true
 					}
 				}
 			}
 		}
 	}
 
-	if !got_data {
+	if !gotData {
 		check.ExitCritical("No data returned for %s", os.Args[1:])
 	}
 }
 
 func seriesMatched(series models.Row) bool {
-	tags_provided := len(opts.Tags)
+	tagsProvided := len(opts.Tags)
 	if opts.RunMode == "query" || len(opts.Module) == 0 {
 		return true
 	}
 
 	if series.Name == opts.Module {
-		if tags_provided == 0 {
+		if tagsProvided == 0 {
 			return true
 		}
 
-		tags_matched := 0
+		tagsMatched := 0
 		for k, expected := range opts.Tags {
 			if got, ok := series.Tags[k]; ok && got == expected {
-				tags_matched++
+				tagsMatched++
 			}
 		}
-		if tags_provided == tags_matched {
+		if tagsProvided == tagsMatched {
 			return true
 		}
 	}
