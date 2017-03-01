@@ -209,7 +209,7 @@ WARNING: Query 'SELECT DIFFERENCE(MAX(writeError)) AS writeErrors FROM "write" W
 
 - Alert if number of series is growing out of control
 $ check_influxdb -H localhost -M database -t database:measurements -m numSeries -w 1000 -c 10000
-OK: database stats (database:measurements) for: numSeries | numSeries=896;1000;10000;;
+WARNING: database stats(database:opsview) for: numSeries, numSeries is 1100 (outside 1000) | numSeries=1100;1000;10000;;
 
 - Check disk usage for given database shard by its id
 $ check_influxdb -H localhost -M shard -t database:measurements -t id:20 -m diskBytes
