@@ -8,6 +8,7 @@ import (
 	"github.com/influxdata/influxdb/models"
 	"os"
 	"strings"
+	"time"
 )
 
 var opts struct {
@@ -25,6 +26,7 @@ var opts struct {
 	CriticalThreshold  string            `short:"c" long:"critical" description:"Critical threshold"`
 	InsecureSkipVerify bool              `long:"ignore-ssl-errors" description:"Ignore SSL certificate errors"`
 	UOM                string            `long:"uom" description:"UOM for metrics"`
+	Timeout            int               `long:"timeout" description:"Connection timeout in seconds" default:"30"`
 }
 
 func main() {
@@ -80,6 +82,7 @@ func main() {
 	clientConfig := client.HTTPConfig{
 		Addr:               fmt.Sprintf("%s://%s:%d", opts.Schema, opts.Hostname, opts.Port),
 		InsecureSkipVerify: opts.InsecureSkipVerify,
+		Timeout:            time.Duration(opts.Timeout) * time.Second,
 	}
 
 	if len(opts.Username) > 0 {
