@@ -36,45 +36,10 @@ func main() {
 	)
 	wanted_metrics := make(map[string]bool)
 
-	check := plugin.New("check_influxdb", "1.0.0")
-	check.Preamble = `Copyright (c) 2017 Alex J. G. Burzyński (ajgb@cpan.org)
 
-This plugin tests InfluxDB TimeSeries database server.
-`
 
-	check.Description = `DESCRIPTION
-
-Plugin supports following run modes:
-- stats:    runs SHOW STATS FOR 'MODULE'.
-            Where MODULE is provided by [-M|--module] parameter.
-            If given module returns multiple series, use [-t|--tag] to locate
-            requested data.
-            List of returned metrics could be limited by providing [-m|--metric]
-            parameters.
-
-- query:    executes specified query on _internal database.
-            Multiple queries (separated by semicolon) could be executed as long as
-            each returns only one row and no duplicated metrics are to be found.
-
-Note: Warning and critical thresholds are applied to all metrics.
-
-Examples:
-- List only specified metrics from runtime
-$ check_influxdb -m Alloc -m TotalAlloc --uom c
-OK: runtime Stats for: Alloc, TotalAlloc | Alloc=24334856c;;;; TotalAlloc=13365442832c;;;;
-
-- Alert if there were write errors in last 5 minutes
-$ check_influxdb -r query -w 1 -c 5 -q='SELECT DIFFERENCE(MAX(writeError)) AS writeErrors FROM "write" WHERE time > now() - 5m GROUP BY time(5m) LIMIT 1 OFFSET 1'
-WARNING: Query 'SELECT DIFFERENCE(MAX(writeError)) AS writeErrors FROM "write" WHERE time > now() - 5m GROUP BY time(5m) LIMIT 1 OFFSET 1', writeErrors is 2 (outside 1) | writeErrors=2;1;5;;
-
-- Alert if number of series is growing out of control
-$ check_influxdb -M database -t database:measurements -m numSeries -w 1000 -c 10000
-OK: database stats (database:measurements) for: numSeries | numSeries=896;1000;10000;;
-
-- Check disk usage for given database shard by its id 
-$ check_influxdb -M shard -t database:measurements -t id:20 -m diskBytes
-OK: shard stats (database:measurements, id:20) for: diskBytes | diskBytes=972026;;;;
-`
+	// init plugin
+	check := checkPlugin()
 
 	if err := check.ParseArgs(&opts); err != nil {
 		check.ExitCritical("Error parsing arguments: %s\n", err)
@@ -204,4 +169,51 @@ func seriesMatched(series models.Row) bool {
 	}
 
 	return false
+}
+
+func checkPlugin() *plugin.Plugin {
+	check := plugin.New("check_influxdb", "v1.0.0")
+	check.Preamble = `Copyright (c) 2017 Alex J. G. Burzyński (ajgb@ajgb.org)
+
+This plugin tests InfluxDB TimeSeries database server.
+`
+
+	check.Description = `DESCRIPTION
+
+Plugin supports following run modes:
+- stats:    runs SHOW STATS FOR 'MODULE'.
+            Where MODULE is provided by [-M|--module] parameter.
+            If given module returns multiple series, use [-t|--tag] to locate
+            requested data.
+            List of returned metrics could be limited by providing [-m|--metric]
+            parameters.
+
+- query:    executes specified query on _internal database.
+            Multiple queries (separated by semicolon) could be executed as long as
+            each returns only one row and no duplicated metrics are to be found.
+
+Note: Warning and critical thresholds are applied to all metrics.
+
+Examples:
+- List only specified metrics from runtime
+$ check_influxdb -H localhost -m Alloc -m TotalAlloc --uom c
+OK: runtime Stats for: Alloc, TotalAlloc | Alloc=24334856c;;;; TotalAlloc=13365442832c;;;;
+
+- Alert if there were write errors in last 5 minutes
+$ check_influxdb -H localhost -r query -w 1 -c 5 -q='SELECT DIFFERENCE(MAX(writeError)) AS writeErrors FROM "write" WHERE time > now() - 5m GROUP BY time(5m) LIMIT 1 OFFSET 1'
+WARNING: Query 'SELECT DIFFERENCE(MAX(writeError)) AS writeErrors FROM "write" WHERE time > now() - 5m GROUP BY time(5m) LIMIT 1 OFFSET 1', writeErrors is 2 (outside 1) | writeErrors=2;1;5;;
+
+- Alert if number of series is growing out of control
+$ check_influxdb -H localhost -M database -t database:measurements -m numSeries -w 1000 -c 10000
+OK: database stats (database:measurements) for: numSeries | numSeries=896;1000;10000;;
+
+- Check disk usage for given database shard by its id
+$ check_influxdb -H localhost -M shard -t database:measurements -t id:20 -m diskBytes
+OK: shard stats (database:measurements, id:20) for: diskBytes | diskBytes=972026;;;;
+
+- Connect with username and password using SSL
+$ check_influxdb -H localhost -s https -u admin -p s3cr3t -M queryExecutor -m queriesActive
+OK: queryExecutor stats for: queriesActive | queriesActive=23;;;;
+`
+	return check
 }
