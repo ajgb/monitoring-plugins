@@ -6,7 +6,6 @@ import (
 	"github.com/ajgb/go-plugin"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -108,9 +107,7 @@ func main() {
 		}
 		results = response.Results
 	} else {
-		// convert %27 into '
-		errmsg, _ := url.QueryUnescape(err.Error())
-		check.ExitCritical("Failed to query InfluxDB server: %s", errmsg)
+		check.ExitCritical("Failed to query InfluxDB server: %s", err)
 	}
 
 	// process response
