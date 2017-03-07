@@ -159,11 +159,11 @@ Note: Warning and critical thresholds are applied to all metrics.
 
 Examples:
 - Check expvar metrics for InfluxDB
-$ check_json_api -H localhost -P 8086 -U /debug/vars -M "Memstats metrics" -m memstats.Alloc -m memstats.GCCPUFraction
-OK: Memstats metrics | memstats.Alloc=52836064;;;; memstats.GCCPUFraction=0.0001307805780720632;;;;
+$ check_api_json -H localhost -P 8086 -U /debug/vars -b -M "Memstats metrics" -m memstats.Alloc -m memstats.GCCPUFraction
+OK: Memstats metrics | Alloc=52836064;;;; GCCPUFraction=0.0001307805780720632;;;;
 
 - Check Jenkins test job results
-$ check_json_api -H localhost -U /job/tests/lastCompletedBuild/testReport/api/json -M "Job Summary" -m healthReport.0.description
+$ check_api_json -H localhost -U /job/PROJECT/api/json -M "Job Summary" -m healthReport.0.description
 OK: Job Summary, Test Result: 1,234 tests failing out of a total of 56,789 tests.
 `
 	return check
